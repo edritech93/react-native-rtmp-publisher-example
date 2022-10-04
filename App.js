@@ -1,117 +1,110 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+import React, {useRef, useState, useEffect} from 'react';
+import {View, StyleSheet, Text} from 'react-native';
+import {Button} from 'react-native-paper';
+import RTMPPublisher from 'react-native-rtmp-publisher';
 
-import React from 'react';
-import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+export default function App(props) {
+  const [isStream, setIsStream] = useState(false);
+  const publisherRef = useRef();
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  useEffect(() => {
+    async function _loadStatusStream() {
+      const isActive = await publisherRef.current.isStreaming();
+      setIsStream(isActive);
+    }
+    _loadStatusStream();
+  }, []);
 
-/* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
- * LTI update could not be added via codemod */
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+  const _onStartStream = async () => {
+    setIsStream(true);
+    await publisherRef.current.startStream();
+  };
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const _onStopStream = async () => {
+    setIsStream(false);
+    await publisherRef.current.stopStream();
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
+    <View style={styles.container}>
+      <RTMPPublisher
+        ref={publisherRef}
+        // streamURL={'rtmp://a.rtmp.youtube.com/live2'}
+        // streamName={'stream_key_here'}
+        streamURL={'rtmp://demo.flashphoner.com:1935/live/'}
+        streamName={'live_stream'}
+        onConnectionFailedRtmp={() => {
+          console.log('------------------------------------');
+          console.log('onConnectionFailedRtmp');
+          console.log('------------------------------------');
+        }}
+        onConnectionStartedRtmp={() => {
+          console.log('------------------------------------');
+          console.log('onConnectionStartedRtmp');
+          console.log('------------------------------------');
+        }}
+        onConnectionSuccessRtmp={() => {
+          console.log('------------------------------------');
+          console.log('onConnectionSuccessRtmp');
+          console.log('------------------------------------');
+        }}
+        onDisconnectRtmp={() => {
+          console.log('------------------------------------');
+          console.log('onDisconnectRtmp');
+          console.log('------------------------------------');
+        }}
+        onNewBitrateRtmp={() => {
+          console.log('------------------------------------');
+          console.log('onNewBitrateRtmp');
+          console.log('------------------------------------');
+        }}
+        onStreamStateChanged={state => {
+          console.log('------------------------------------');
+          console.log('onStreamStateChanged => ', state);
+          console.log('------------------------------------');
+        }}
+        style={styles.wrapCamera}
       />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+      <View style={styles.wrapAction}>
+        <Text style={styles.textDesc}>{'Testing Stream RTMP'}</Text>
+        <Button
+          mode={'contained'}
+          disabled={isStream}
+          onPress={_onStartStream}
+          style={styles.btnStart}>
+          Start
+        </Button>
+        <Button mode={'contained'} disabled={!isStream} onPress={_onStopStream}>
+          Stop
+        </Button>
+      </View>
+    </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    backgroundColor: 'red',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  wrapCamera: {
+    flex: 1,
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
+  wrapAction: {
+    position: 'absolute',
+    left: 16,
+    right: 16,
+    bottom: 16,
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 16,
   },
-  highlight: {
-    fontWeight: '700',
+  textDesc: {
+    color: 'black',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  btnStart: {
+    marginBottom: 16,
   },
 });
-
-export default App;
